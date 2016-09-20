@@ -49,6 +49,10 @@
         android:id="@+id/tvScore"
         android:layout_alignParentTop="true"
         />
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
 
     <ImageView
         android:layout_width="200dp"
@@ -57,6 +61,16 @@
         android:src="@drawable/dice2"
         android:layout_gravity="center"
         />
+
+    <ImageView
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:id="@+id/ivDice2"
+        android:src="@drawable/dice3"
+        android:layout_gravity="center"
+        />
+
+</LinearLayout>
 
 <LinearLayout
     android:layout_width="wrap_content"
@@ -86,5 +100,15 @@
         android:id="@+id/bReset"/>
 
 </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Feedback!"
+        android:layout_gravity="center"
+        android:textSize="20sp"
+        android:paddingTop="20dp"
+        android:id="@+id/tvFeedback"
+        />
 
 </LinearLayout>

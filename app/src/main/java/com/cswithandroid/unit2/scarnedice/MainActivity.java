@@ -2,10 +2,10 @@ package com.cswithandroid.unit2.scarnedice;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
@@ -15,7 +15,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,14 +22,20 @@ public class MainActivity extends AppCompatActivity {
     int compScore = 0;
     int localScore = 0;
     boolean userTurn = true;
+    boolean rollAgain = false;
+    String ROLL_AGAIN = "Double rolled. Roll again!",
+           ONE_ROLLED = "Lost current turn's point!",
+           DOUBLE_ONE_ROLLED = "Lost all points! Tough luck!",
+           SCORE = "Scored, Nice one!";
+
 
     Handler handler = new Handler();
 
     int diceIndex[] = {R.drawable.dice1, R.drawable.dice2, R.drawable.dice3, R.drawable.dice4, R.drawable.dice5, R.drawable.dice6 };
 
     Animation anim1,anim2;
-    TextView tvPlayer,tvOpponent,tvScore,tvHeader;
-    ImageView ivDice;
+    TextView tvPlayer,tvOpponent,tvScore,tvHeader, tvFeedback;
+    ImageView ivDice, ivDice2;
     Button bRoll;
     Button bReset;
     Button bHold;
@@ -43,8 +48,10 @@ public class MainActivity extends AppCompatActivity {
         tvHeader = (TextView) findViewById(R.id.tvHeader);
         tvPlayer = (TextView) findViewById(R.id.tvPlayer);
         tvOpponent = (TextView) findViewById(R.id.tvOpponent);
+        tvFeedback = (TextView) findViewById(R.id.tvFeedback);
         tvScore = (TextView) findViewById(R.id.tvScore);
         ivDice = (ImageView) findViewById(R.id.ivDice);
+        ivDice2 = (ImageView) findViewById(R.id.ivDice2);
         bRoll = (Button) findViewById(R.id.bRoll);
         bReset = (Button) findViewById(R.id.bReset);
         bHold = (Button) findViewById(R.id.bHold);
@@ -74,7 +81,8 @@ public class MainActivity extends AppCompatActivity {
         bRoll.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Perform action on click
-                rollButton();
+               // rollButton();
+                 rollDice();
             }
         });
 
@@ -84,6 +92,77 @@ public class MainActivity extends AppCompatActivity {
                 resetButton();
             }
         });
+    }
+
+    public void rollDice() {
+
+        Random r = new Random();
+        int dice = r.nextInt(6) + 1;
+        int dice2 = r.nextInt(6) + 1;
+
+        ivDice.setImageResource(diceIndex[dice - 1]);
+        ivDice2.setImageResource(diceIndex[dice2 - 1]);
+
+        if(rollAgain){
+            rollAgain = false;
+            bHold.setClickable(true);
+        }
+
+        if(dice == 1 || dice2 == 1){
+
+            Log.d("Condition", "Entered 1's dice condition");
+            changeTextColor();
+
+                if(dice == 1 && dice2 == 1) {
+                    resetScore();
+                    showFeedback(DOUBLE_ONE_ROLLED);
+                }
+                else
+                    showFeedback(ONE_ROLLED);
+
+            userTurn = !userTurn;
+            localScore = 0;
+        }
+        else if (dice == dice2){
+
+            // Roll again logic
+            Log.d("Condition", "Entered equal dice condition");
+            localScore = localScore + dice + dice2;
+            rollAgain = true;
+            bHold.setClickable(false);
+            showFeedback(ROLL_AGAIN);
+        }
+        else {
+            Log.d("Condition", "Entered unequal dice condition");
+            localScore = localScore + dice + dice2;
+            showFeedback(SCORE);
+        }
+
+        setScores();
+        checkWinCase();
+
+        Log.d("Roll", "Dice rolled successfully");
+    }
+
+    public void resetScore() {
+        // Reset entire score here
+        if(userTurn)
+            userScore = 0;
+        else
+            compScore = 0;
+
+    }
+
+    public void setScores() {
+
+        String setScore = "Current_Score: " + localScore;
+        tvScore.setText(setScore);
+
+        String playerScore = "Player: " + userScore;
+        tvPlayer.setText(playerScore);
+
+        String opponentScore = "Opponent: " + compScore;
+        tvOpponent.setText(opponentScore);
     }
 
     public void rollButton(){
@@ -138,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
            score = compScore + localScore;
         }
 
-        if(score >= 20){
+        if(score >= 100){
             tvHeader.setText("Game over!");
             bHold.setClickable(false);
             bRoll.setClickable(false);
@@ -147,18 +226,31 @@ public class MainActivity extends AppCompatActivity {
             CharSequence gameOver = "Game Over!";
             CharSequence newGame = "Starting new game!";
 
-            Toast.makeText(context, gameOver, Toast.LENGTH_LONG).show();
+            Toast.makeText(context, gameOver, Toast.LENGTH_SHORT).show();
             Toast.makeText(context, newGame, Toast.LENGTH_LONG).show();
 
-
             try {
-                TimeUnit.MILLISECONDS.sleep(5000);
-                resetButton();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        resetButton();
+                    }
+                }, 4000);
             }
-            catch(InterruptedException e){
+            catch(Exception e){
                 e.printStackTrace();
             }
         }
+    }
+
+    public void showFeedback(String feedback) {
+        tvFeedback.setText(feedback);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                tvFeedback.setText("Feedback!");
+            }
+        },1500);
     }
 
     public void resetButton(){
@@ -166,12 +258,7 @@ public class MainActivity extends AppCompatActivity {
         userScore = 0;
         compScore = 0;
 
-        String playerScore = "Player: " + localScore;
-        tvPlayer.setText(playerScore);
-        String opponentScore = "Opponent: " + localScore;
-        tvOpponent.setText(opponentScore);
-        String setScore = "Current_Score: " + localScore;
-        tvScore.setText(setScore);
+        setScores();
         tvHeader.setText("Get a 100 to win!");
 
         bHold.setClickable(true);
@@ -182,24 +269,24 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void holdButton(){
-
-        changeTextColor();
+    public void addScores() {
         if(userTurn){
             userScore = userScore + localScore;
-            String playerScore = "Player: " + userScore;
-            tvPlayer.setText(playerScore);
         }
         else{
             compScore = compScore + localScore;
-            String opponentScore = "Opponent: " + compScore;
-            tvOpponent.setText(opponentScore);
         }
+    }
+
+    public void holdButton(){
+
+        changeTextColor();
+        addScores();
+
         userTurn = !userTurn;
         localScore = 0;
 
-        String setScore = "Current_Score: " + localScore;
-        tvScore.setText(setScore);
+        setScores();
     }
 
 }
